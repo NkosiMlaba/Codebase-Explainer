@@ -144,7 +144,7 @@ def index_codebase():
                 use_parser=False,
                 verbose=False,
                 filter_file_extensions=(
-                    [".py", ".js", ".ts", ".md", ".html", ".css", ".cpp", ".c", ".h", ".txt", ".json"],
+                    [".py", ".js", ".ts", ".md", ".html", ".css", ".cpp", ".c", ".h", ".txt", ".json", ".ipynb", ".cs", ".tsx"],
                     GithubRepositoryReader.FilterType.INCLUDE
                 ),
             )
@@ -175,8 +175,17 @@ def index_codebase():
         if not documents:
              return jsonify({"error": "No documents found to index"}), 400
 
+        # Collect file paths for tree visualization
+        indexed_files = []
+        for doc in documents:
+            file_path = doc.metadata.get('file_path') or doc.metadata.get('file_name', 'unknown')
+            indexed_files.append(file_path)
+  
         index_engine = VectorStoreIndex.from_documents(documents)
-        return jsonify({"message": f"Successfully indexed {len(documents)} documents."})
+        return jsonify({
+            "message": f"Successfully indexed {len(documents)} documents.",
+            "indexed_files": indexed_files
+        })
 
     except Exception as e:
         logger.error(f"Indexing error: {e}")

@@ -1,19 +1,46 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Codebase Explainer</title>
+    <!-- Highlight.js for syntax highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <!-- Marked for Markdown rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
-        :root {
+        /* Theme Variables */
+        :root, [data-theme="dark"] {
             --bg-color: #0f172a;
-            --sidebar-width: 300px;
+            --sidebar-bg: #1e293b;
+            --sidebar-width: 320px;
             --primary-color: #3b82f6;
+            --primary-hover: #2563eb;
             --text-color: #e2e8f0;
+            --text-muted: #94a3b8;
             --input-bg: #1e293b;
             --message-user-bg: #3b82f6;
             --message-bot-bg: #1e293b;
             --border-color: #334155;
+            --success-color: #4ade80;
+            --error-color: #f87171;
+            --warning-color: #fbbf24;
+        }
+
+        [data-theme="light"] {
+            --bg-color: #f8fafc;
+            --sidebar-bg: #e2e8f0;
+            --text-color: #1e293b;
+            --text-muted: #64748b;
+            --input-bg: #ffffff;
+            --message-user-bg: #3b82f6;
+            --message-bot-bg: #ffffff;
+            --border-color: #cbd5e1;
+        }
+
+        * {
+            box-sizing: border-box;
         }
 
         body {
@@ -29,18 +56,39 @@
         /* Sidebar */
         .sidebar {
             width: var(--sidebar-width);
-            background-color: #1e293b;
+            background-color: var(--sidebar-bg);
             border-right: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
             padding: 20px;
-            box-sizing: border-box;
+            overflow-y: auto;
         }
 
-        .sidebar h2 {
-            font-size: 1.25rem;
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 20px;
-            color: white;
+        }
+
+        .sidebar-header h2 {
+            font-size: 1.25rem;
+            margin: 0;
+        }
+
+        /* Theme Toggle */
+        .theme-toggle {
+            background: none;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 6px 10px;
+            cursor: pointer;
+            color: var(--text-color);
+            font-size: 1rem;
+        }
+
+        .theme-toggle:hover {
+            background-color: var(--border-color);
         }
 
         .config-section {
@@ -57,7 +105,7 @@
 
         .form-group label {
             font-size: 0.875rem;
-            color: #94a3b8;
+            color: var(--text-muted);
         }
 
         .form-group input, .form-group select {
@@ -65,7 +113,7 @@
             border-radius: 6px;
             border: 1px solid var(--border-color);
             background-color: var(--bg-color);
-            color: white;
+            color: var(--text-color);
             outline: none;
         }
 
@@ -73,35 +121,105 @@
             border-color: var(--primary-color);
         }
 
-        #index-btn {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
+        .btn-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            flex: 1;
             padding: 10px;
             border-radius: 6px;
             cursor: pointer;
             font-weight: 600;
             transition: background-color 0.2s;
+            border: none;
         }
 
-        #index-btn:hover {
-            background-color: #2563eb;
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
         }
 
-        #index-btn:disabled {
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-primary:disabled {
             opacity: 0.7;
             cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--border-color);
         }
 
         #status-msg {
             font-size: 0.875rem;
             margin-top: 10px;
             min-height: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        .status-success { color: #4ade80; }
-        .status-error { color: #f87171; }
-        .status-loading { color: #fbbf24; }
+        .status-success { color: var(--success-color); }
+        .status-error { color: var(--error-color); }
+        .status-loading { color: var(--warning-color); }
+
+        /* Spinner */
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--warning-color);
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* File Tree */
+        .file-tree-section {
+            margin-top: 20px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 15px;
+        }
+
+        .file-tree-section h3 {
+            font-size: 0.9rem;
+            margin: 0 0 10px 0;
+            color: var(--text-muted);
+        }
+
+        .file-tree {
+            font-size: 0.8rem;
+            max-height: 200px;
+            overflow-y: auto;
+            background-color: var(--bg-color);
+            border-radius: 6px;
+            padding: 10px;
+        }
+
+        .file-tree-item {
+            padding: 3px 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .file-tree-item::before {
+            content: "📄";
+            font-size: 0.75rem;
+        }
 
         /* Main Chat Area */
         .chat-area {
@@ -109,6 +227,13 @@
             display: flex;
             flex-direction: column;
             position: relative;
+        }
+
+        .chat-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
         }
 
         .chat-container {
@@ -131,6 +256,7 @@
             background-color: var(--message-user-bg);
             padding: 12px 18px;
             border-radius: 18px 18px 0 18px;
+            color: white;
         }
 
         .message.bot {
@@ -142,23 +268,29 @@
         }
 
         .message.bot code {
-            background-color: #0f172a;
-            padding: 2px 4px;
+            background-color: var(--bg-color);
+            padding: 2px 6px;
             border-radius: 4px;
-            font-family: 'Fira Code', monospace;
+            font-family: 'Fira Code', 'Consolas', monospace;
             font-size: 0.9em;
         }
 
         .message.bot pre {
-            background-color: #0f172a;
+            background-color: var(--bg-color);
             padding: 12px;
             border-radius: 8px;
             overflow-x: auto;
+            margin: 10px 0;
+        }
+
+        .message.bot pre code {
+            padding: 0;
+            background: none;
         }
 
         .input-area {
             padding: 20px;
-            background-color: var(--bg-color); /* Matches body bg */
+            background-color: var(--bg-color);
             border-top: 1px solid var(--border-color);
             display: flex;
             gap: 10px;
@@ -170,10 +302,10 @@
             border-radius: 8px;
             border: 1px solid var(--border-color);
             background-color: var(--input-bg);
-            color: white;
+            color: var(--text-color);
             outline: none;
             resize: none;
-            height: 24px; /* one line initially */
+            height: 24px;
             max-height: 150px;
         }
 
@@ -192,7 +324,7 @@
         }
 
         #send-btn:hover {
-            background-color: #2563eb;
+            background-color: var(--primary-hover);
         }
 
         @keyframes fadeIn {
@@ -215,14 +347,28 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #64748b;
         }
+
+        .sidebar-footer {
+            margin-top: auto;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .sidebar-footer p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-align: center;
+            margin: 0;
+        }
     </style>
-    <!-- Marked for Markdown rendering -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
 
     <div class="sidebar">
-        <h2>Codebase Explainer</h2>
+        <div class="sidebar-header">
+            <h2>Codebase Explainer</h2>
+            <button class="theme-toggle" id="theme-toggle" title="Toggle theme">🌙</button>
+        </div>
         
         <div class="config-section">
             <div class="form-group">
@@ -234,25 +380,30 @@
             </div>
 
             <div class="form-group">
-                <label for="source-path" id="source-path-label">Path</label>
+                <label for="source-path">Path</label>
                 <input type="text" id="source-path" placeholder="/path/to/directory">
             </div>
 
-            <button id="index-btn">Index Codebase</button>
+            <div class="btn-row">
+                <button class="btn btn-primary" id="index-btn">Index</button>
+                <button class="btn btn-secondary" id="clear-btn">Clear</button>
+            </div>
             <div id="status-msg"></div>
         </div>
 
-        <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border-color);">
-            <p style="font-size: 0.8rem; color: #64748b; text-align: center;">Powered by LlamaIndex & Flask</p>
+        <div class="file-tree-section" id="file-tree-section" style="display: none;">
+            <h3>Indexed Files</h3>
+            <div class="file-tree" id="file-tree"></div>
+        </div>
+
+        <div class="sidebar-footer">
+            <p>Powered by LlamaIndex & Flask</p>
         </div>
     </div>
 
     <div class="chat-area">
         <div class="chat-container" id="chat-container">
             <!-- Messages will appear here -->
-            <div class="message bot">
-                Hello! I'm your Codebase Assistant. Please index a codebase using the sidebar to get started.
-            </div>
         </div>
 
         <div class="input-area">
@@ -262,14 +413,73 @@
     </div>
 
     <script>
+        // DOM Elements
         const sourceTypeSelect = document.getElementById('source-type');
         const sourcePathInput = document.getElementById('source-path');
-        const sourcePathLabel = document.getElementById('source-path-label'); // Can define if we had an id, using previousSibling logic or just ID
         const indexBtn = document.getElementById('index-btn');
+        const clearBtn = document.getElementById('clear-btn');
         const statusMsg = document.getElementById('status-msg');
         const chatContainer = document.getElementById('chat-container');
         const chatInput = document.getElementById('chat-input');
         const sendBtn = document.getElementById('send-btn');
+        const themeToggle = document.getElementById('theme-toggle');
+        const fileTreeSection = document.getElementById('file-tree-section');
+        const fileTree = document.getElementById('file-tree');
+
+        // === Theme ===
+        function loadTheme() {
+            const saved = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', saved);
+            themeToggle.textContent = saved === 'dark' ? '🌙' : '☀️';
+        }
+
+        themeToggle.addEventListener('click', () => {
+            const current = document.documentElement.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+            themeToggle.textContent = next === 'dark' ? '🌙' : '☀️';
+        });
+
+        loadTheme();
+
+        // === Chat History Persistence ===
+        function loadChatHistory() {
+            const history = JSON.parse(localStorage.getItem('chatHistory') || '[]');
+            chatContainer.innerHTML = '';
+            if (history.length === 0) {
+                appendMessage("Hello! I'm your Codebase Assistant. Please index a codebase using the sidebar to get started.", 'bot', false);
+            } else {
+                history.forEach(msg => appendMessage(msg.text, msg.role, false));
+            }
+        }
+
+        function saveChatHistory() {
+            const messages = [];
+            chatContainer.querySelectorAll('.message').forEach(div => {
+                const role = div.classList.contains('user') ? 'user' : 'bot';
+                const text = role === 'user' ? div.textContent : div.innerHTML;
+                messages.push({ role, text });
+            });
+            localStorage.setItem('chatHistory', JSON.stringify(messages));
+        }
+
+        function clearChatHistory() {
+            localStorage.removeItem('chatHistory');
+            chatContainer.innerHTML = '';
+            appendMessage("Hello! I'm your Codebase Assistant. Please index a codebase to get started.", 'bot', false);
+        }
+
+        loadChatHistory();
+
+        // === Clear Button ===
+        clearBtn.addEventListener('click', () => {
+            sourcePathInput.value = '';
+            statusMsg.innerHTML = '';
+            fileTreeSection.style.display = 'none';
+            fileTree.innerHTML = '';
+            clearChatHistory();
+        });
 
         // Toggle placeholder based on type
         sourceTypeSelect.addEventListener('change', () => {
@@ -280,73 +490,80 @@
             }
         });
 
-        // Indexing Logic
+        // === Indexing Logic ===
         indexBtn.addEventListener('click', async () => {
-             const type = sourceTypeSelect.value;
-             const path = sourcePathInput.value.trim();
+            const type = sourceTypeSelect.value;
+            const path = sourcePathInput.value.trim();
 
-             if (!path) {
-                 statusMsg.textContent = "Please enter a path or URL.";
-                 statusMsg.className = "status-error";
-                 return;
-             }
+            if (!path) {
+                statusMsg.innerHTML = '<span class="status-error">Please enter a path or URL.</span>';
+                return;
+            }
 
-             statusMsg.textContent = "Indexing... This may take a while.";
-             statusMsg.className = "status-loading";
-             indexBtn.disabled = true;
+            // Clear chat when indexing new source
+            clearChatHistory();
 
-             try {
-                 const res = await fetch('/index', {
-                     method: 'POST',
-                     headers: { 'Content-Type': 'application/json' },
-                     body: JSON.stringify({ type, path })
-                 });
+            // Show loading spinner
+            statusMsg.innerHTML = '<div class="spinner"></div><span class="status-loading">Indexing...</span>';
+            indexBtn.disabled = true;
+            sourcePathInput.disabled = true;
 
-                 const data = await res.json();
+            try {
+                const res = await fetch('/index', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type, path })
+                });
 
-                 if (res.ok) {
-                     statusMsg.textContent = "Success! " + data.message;
-                     statusMsg.className = "status-success";
-                 } else {
-                     statusMsg.textContent = "Error: " + data.error;
-                     statusMsg.className = "status-error";
-                 }
-             } catch (e) {
-                 statusMsg.textContent = "Network error occurred.";
-                 statusMsg.className = "status-error";
-             } finally {
-                 indexBtn.disabled = false;
-             }
+                const data = await res.json();
+
+                if (res.ok) {
+                    statusMsg.innerHTML = '<span class="status-success">✓ ' + data.message + '</span>';
+                    
+                    // Render file tree
+                    if (data.indexed_files && data.indexed_files.length > 0) {
+                        fileTree.innerHTML = data.indexed_files.map(f => 
+                            `<div class="file-tree-item">${f}</div>`
+                        ).join('');
+                        fileTreeSection.style.display = 'block';
+                    }
+                } else {
+                    statusMsg.innerHTML = '<span class="status-error">✗ ' + data.error + '</span>';
+                }
+            } catch (e) {
+                statusMsg.innerHTML = '<span class="status-error">Network error occurred.</span>';
+            } finally {
+                indexBtn.disabled = false;
+                sourcePathInput.disabled = false;
+            }
         });
 
-        // Chat Logic
+        // === Chat Logic ===
         async function sendMessage() {
             const message = chatInput.value.trim();
             if (!message) return;
 
-            // Add User Message
             appendMessage(message, 'user');
             chatInput.value = '';
 
-            // Add Placeholder Bot Message
             const botMessageDiv = appendMessage('', 'bot');
-            botMessageDiv.textContent = 'Thinking...';
+            botMessageDiv.innerHTML = '<div class="spinner"></div> Thinking...';
 
             try {
                 const response = await fetch('/chat', {
-                     method: 'POST',
-                     headers: { 'Content-Type': 'application/json' },
-                     body: JSON.stringify({ message })
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message })
                 });
 
                 if (!response.ok) {
                     const data = await response.json();
-                     botMessageDiv.textContent = "Error: " + (data.error || "Unknown error");
+                    botMessageDiv.textContent = "Error: " + (data.error || "Unknown error");
+                    saveChatHistory();
                     return;
                 }
 
-                // Stream response
-                botMessageDiv.textContent = ''; // Clear "Thinking..."
+                botMessageDiv.innerHTML = '';
                 const reader = response.body.getReader();
                 const decoder = new TextDecoder();
                 let fullText = '';
@@ -357,25 +574,36 @@
                     
                     const chunk = decoder.decode(value, { stream: true });
                     fullText += chunk;
-                    botMessageDiv.innerHTML = marked.parse(fullText); // Render markdown
+                    botMessageDiv.innerHTML = marked.parse(fullText);
+                    // Apply syntax highlighting
+                    botMessageDiv.querySelectorAll('pre code').forEach(block => {
+                        hljs.highlightElement(block);
+                    });
                     chatContainer.scrollTop = chatContainer.scrollHeight;
                 }
 
+                saveChatHistory();
+
             } catch (e) {
                 botMessageDiv.textContent = "Error: Failed to connect to chat server.";
+                saveChatHistory();
             }
         }
 
-        function appendMessage(text, role) {
+        function appendMessage(text, role, save = true) {
             const div = document.createElement('div');
             div.className = `message ${role}`;
             if (role === 'bot') {
-                 div.innerHTML = marked.parse(text);
+                div.innerHTML = marked.parse(text);
+                div.querySelectorAll('pre code').forEach(block => {
+                    hljs.highlightElement(block);
+                });
             } else {
                 div.textContent = text;
             }
             chatContainer.appendChild(div);
             chatContainer.scrollTop = chatContainer.scrollHeight;
+            if (save) saveChatHistory();
             return div;
         }
 
