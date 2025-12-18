@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,7 +12,8 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         /* Theme Variables */
-        :root, [data-theme="dark"] {
+        :root,
+        [data-theme="dark"] {
             --bg-color: #0f172a;
             --sidebar-bg: #1e293b;
             --sidebar-width: 320px;
@@ -108,7 +110,8 @@
             color: var(--text-muted);
         }
 
-        .form-group input, .form-group select {
+        .form-group input,
+        .form-group select {
             padding: 10px;
             border-radius: 6px;
             border: 1px solid var(--border-color);
@@ -117,7 +120,8 @@
             outline: none;
         }
 
-        .form-group input:focus, .form-group select:focus {
+        .form-group input:focus,
+        .form-group select:focus {
             border-color: var(--primary-color);
         }
 
@@ -169,9 +173,17 @@
             gap: 8px;
         }
 
-        .status-success { color: var(--success-color); }
-        .status-error { color: var(--error-color); }
-        .status-loading { color: var(--warning-color); }
+        .status-success {
+            color: var(--success-color);
+        }
+
+        .status-error {
+            color: var(--error-color);
+        }
+
+        .status-loading {
+            color: var(--warning-color);
+        }
 
         /* Spinner */
         .spinner {
@@ -184,7 +196,9 @@
         }
 
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         /* File Tree */
@@ -328,8 +342,15 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         /* Scrollbar */
@@ -337,13 +358,16 @@
             width: 8px;
             height: 8px;
         }
+
         ::-webkit-scrollbar-track {
-            background: rgba(0,0,0,0.1);
+            background: rgba(0, 0, 0, 0.1);
         }
+
         ::-webkit-scrollbar-thumb {
             background: #475569;
             border-radius: 4px;
         }
+
         ::-webkit-scrollbar-thumb:hover {
             background: #64748b;
         }
@@ -362,6 +386,7 @@
         }
     </style>
 </head>
+
 <body>
 
     <div class="sidebar">
@@ -369,7 +394,7 @@
             <h2>Codebase Explainer</h2>
             <button class="theme-toggle" id="theme-toggle" title="Toggle theme">🌙</button>
         </div>
-        
+
         <div class="config-section">
             <div class="form-group">
                 <label for="source-type">Source Type</label>
@@ -443,6 +468,36 @@
 
         loadTheme();
 
+        // === Index State Persistence ===
+        function saveIndexState(type, path, files) {
+            localStorage.setItem('indexState', JSON.stringify({ type, path, files }));
+        }
+
+        function loadIndexState() {
+            const state = JSON.parse(localStorage.getItem('indexState') || 'null');
+            if (state) {
+                sourceTypeSelect.value = state.type || 'local';
+                sourcePathInput.value = state.path || '';
+                // Update placeholder based on type
+                sourcePathInput.placeholder = state.type === 'github'
+                    ? 'https://github.com/owner/repo'
+                    : '/path/to/directory';
+                // Restore file tree
+                if (state.files && state.files.length > 0) {
+                    fileTree.innerHTML = state.files.map(f =>
+                        `<div class="file-tree-item">${f}</div>`
+                    ).join('');
+                    fileTreeSection.style.display = 'block';
+                }
+            }
+        }
+
+        function clearIndexState() {
+            localStorage.removeItem('indexState');
+        }
+
+        loadIndexState();
+
         // === Chat History Persistence ===
         function loadChatHistory() {
             const history = JSON.parse(localStorage.getItem('chatHistory') || '[]');
@@ -479,6 +534,7 @@
             fileTreeSection.style.display = 'none';
             fileTree.innerHTML = '';
             clearChatHistory();
+            clearIndexState();
         });
 
         // Toggle placeholder based on type
@@ -519,14 +575,17 @@
 
                 if (res.ok) {
                     statusMsg.innerHTML = '<span class="status-success">✓ ' + data.message + '</span>';
-                    
+
                     // Render file tree
                     if (data.indexed_files && data.indexed_files.length > 0) {
-                        fileTree.innerHTML = data.indexed_files.map(f => 
+                        fileTree.innerHTML = data.indexed_files.map(f =>
                             `<div class="file-tree-item">${f}</div>`
                         ).join('');
                         fileTreeSection.style.display = 'block';
                     }
+
+                    // Save index state
+                    saveIndexState(type, path, data.indexed_files || []);
                 } else {
                     statusMsg.innerHTML = '<span class="status-error">✗ ' + data.error + '</span>';
                 }
@@ -571,7 +630,7 @@
                 while (true) {
                     const { done, value } = await reader.read();
                     if (done) break;
-                    
+
                     const chunk = decoder.decode(value, { stream: true });
                     fullText += chunk;
                     botMessageDiv.innerHTML = marked.parse(fullText);
@@ -614,4 +673,5 @@
 
     </script>
 </body>
+
 </html>
