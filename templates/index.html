@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Codebase Explainer</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --sidebar-width: 300px;
+            --primary-color: #3b82f6;
+            --text-color: #e2e8f0;
+            --input-bg: #1e293b;
+            --message-user-bg: #3b82f6;
+            --message-bot-bg: #1e293b;
+            --border-color: #334155;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: #1e293b;
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .sidebar h2 {
+            font-size: 1.25rem;
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        .config-section {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-group label {
+            font-size: 0.875rem;
+            color: #94a3b8;
+        }
+
+        .form-group input, .form-group select {
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-color);
+            color: white;
+            outline: none;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            border-color: var(--primary-color);
+        }
+
+        #index-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+
+        #index-btn:hover {
+            background-color: #2563eb;
+        }
+
+        #index-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        #status-msg {
+            font-size: 0.875rem;
+            margin-top: 10px;
+            min-height: 20px;
+        }
+
+        .status-success { color: #4ade80; }
+        .status-error { color: #f87171; }
+        .status-loading { color: #fbbf24; }
+
+        /* Main Chat Area */
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .chat-container {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .message {
+            max-width: 80%;
+            line-height: 1.6;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .message.user {
+            align-self: flex-end;
+            background-color: var(--message-user-bg);
+            padding: 12px 18px;
+            border-radius: 18px 18px 0 18px;
+        }
+
+        .message.bot {
+            align-self: flex-start;
+            background-color: var(--message-bot-bg);
+            padding: 12px 18px;
+            border-radius: 18px 18px 18px 0;
+            border: 1px solid var(--border-color);
+        }
+
+        .message.bot code {
+            background-color: #0f172a;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9em;
+        }
+
+        .message.bot pre {
+            background-color: #0f172a;
+            padding: 12px;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+
+        .input-area {
+            padding: 20px;
+            background-color: var(--bg-color); /* Matches body bg */
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 10px;
+        }
+
+        #chat-input {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background-color: var(--input-bg);
+            color: white;
+            outline: none;
+            resize: none;
+            height: 24px; /* one line initially */
+            max-height: 150px;
+        }
+
+        #chat-input:focus {
+            border-color: var(--primary-color);
+        }
+
+        #send-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        #send-btn:hover {
+            background-color: #2563eb;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.1);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+    </style>
+    <!-- Marked for Markdown rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+
+    <div class="sidebar">
+        <h2>Codebase Explainer</h2>
+        
+        <div class="config-section">
+            <div class="form-group">
+                <label for="source-type">Source Type</label>
+                <select id="source-type">
+                    <option value="local">Local Directory</option>
+                    <option value="github">GitHub Repository</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="source-path" id="source-path-label">Path</label>
+                <input type="text" id="source-path" placeholder="/path/to/directory">
+            </div>
+
+            <button id="index-btn">Index Codebase</button>
+            <div id="status-msg"></div>
+        </div>
+
+        <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border-color);">
+            <p style="font-size: 0.8rem; color: #64748b; text-align: center;">Powered by LlamaIndex & Flask</p>
+        </div>
+    </div>
+
+    <div class="chat-area">
+        <div class="chat-container" id="chat-container">
+            <!-- Messages will appear here -->
+            <div class="message bot">
+                Hello! I'm your Codebase Assistant. Please index a codebase using the sidebar to get started.
+            </div>
+        </div>
+
+        <div class="input-area">
+            <input type="text" id="chat-input" placeholder="Ask a question about your codebase..." autocomplete="off">
+            <button id="send-btn">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const sourceTypeSelect = document.getElementById('source-type');
+        const sourcePathInput = document.getElementById('source-path');
+        const sourcePathLabel = document.getElementById('source-path-label'); // Can define if we had an id, using previousSibling logic or just ID
+        const indexBtn = document.getElementById('index-btn');
+        const statusMsg = document.getElementById('status-msg');
+        const chatContainer = document.getElementById('chat-container');
+        const chatInput = document.getElementById('chat-input');
+        const sendBtn = document.getElementById('send-btn');
+
+        // Toggle placeholder based on type
+        sourceTypeSelect.addEventListener('change', () => {
+            if (sourceTypeSelect.value === 'local') {
+                sourcePathInput.placeholder = '/path/to/directory';
+            } else {
+                sourcePathInput.placeholder = 'https://github.com/owner/repo';
+            }
+        });
+
+        // Indexing Logic
+        indexBtn.addEventListener('click', async () => {
+             const type = sourceTypeSelect.value;
+             const path = sourcePathInput.value.trim();
+
+             if (!path) {
+                 statusMsg.textContent = "Please enter a path or URL.";
+                 statusMsg.className = "status-error";
+                 return;
+             }
+
+             statusMsg.textContent = "Indexing... This may take a while.";
+             statusMsg.className = "status-loading";
+             indexBtn.disabled = true;
+
+             try {
+                 const res = await fetch('/index', {
+                     method: 'POST',
+                     headers: { 'Content-Type': 'application/json' },
+                     body: JSON.stringify({ type, path })
+                 });
+
+                 const data = await res.json();
+
+                 if (res.ok) {
+                     statusMsg.textContent = "Success! " + data.message;
+                     statusMsg.className = "status-success";
+                 } else {
+                     statusMsg.textContent = "Error: " + data.error;
+                     statusMsg.className = "status-error";
+                 }
+             } catch (e) {
+                 statusMsg.textContent = "Network error occurred.";
+                 statusMsg.className = "status-error";
+             } finally {
+                 indexBtn.disabled = false;
+             }
+        });
+
+        // Chat Logic
+        async function sendMessage() {
+            const message = chatInput.value.trim();
+            if (!message) return;
+
+            // Add User Message
+            appendMessage(message, 'user');
+            chatInput.value = '';
+
+            // Add Placeholder Bot Message
+            const botMessageDiv = appendMessage('', 'bot');
+            botMessageDiv.textContent = 'Thinking...';
+
+            try {
+                const response = await fetch('/chat', {
+                     method: 'POST',
+                     headers: { 'Content-Type': 'application/json' },
+                     body: JSON.stringify({ message })
+                });
+
+                if (!response.ok) {
+                    const data = await response.json();
+                     botMessageDiv.textContent = "Error: " + (data.error || "Unknown error");
+                    return;
+                }
+
+                // Stream response
+                botMessageDiv.textContent = ''; // Clear "Thinking..."
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let fullText = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    
+                    const chunk = decoder.decode(value, { stream: true });
+                    fullText += chunk;
+                    botMessageDiv.innerHTML = marked.parse(fullText); // Render markdown
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                }
+
+            } catch (e) {
+                botMessageDiv.textContent = "Error: Failed to connect to chat server.";
+            }
+        }
+
+        function appendMessage(text, role) {
+            const div = document.createElement('div');
+            div.className = `message ${role}`;
+            if (role === 'bot') {
+                 div.innerHTML = marked.parse(text);
+            } else {
+                div.textContent = text;
+            }
+            chatContainer.appendChild(div);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            return div;
+        }
+
+        sendBtn.addEventListener('click', sendMessage);
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+    </script>
+</body>
+</html>
