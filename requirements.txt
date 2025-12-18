@@ -1,0 +1,10 @@
+Flask
+python-dotenv
+llama-index
+llama-index-llms-openrouter
+llama-index-embeddings-huggingface
+llama-index-readers-github
+llama-index-readers-file
+sentence-transformers
+nest_asyncio
+pathspec
