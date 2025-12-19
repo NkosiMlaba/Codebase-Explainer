@@ -9,3 +9,4 @@ sentence-transformers
 nest_asyncio
 pathspec
 flask-limiter
+gunicorn
