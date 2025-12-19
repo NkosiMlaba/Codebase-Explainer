@@ -90,6 +90,7 @@ def get_index_hash(source_type, source_path):
 
 # === Global State ===
 index_engine = None
+ai_initialized = False
 indexing_status = {
     "is_indexing": False,
     "progress": 0,
@@ -99,35 +100,47 @@ indexing_status = {
 indexing_lock = threading.Lock()
 
 # --- Configuration ---
-def init_settings():
+def initialize_ai():
+    global ai_initialized
+    if ai_initialized:
+        return True
+
+    logger.info("🤖 Loading AI models...")
+    log_to_db("INFO", "system", "Loading AI models...")
+    
     api_key = os.getenv("OPENROUTER_API_KEY")
     if not api_key:
         logger.error("OPENROUTER_API_KEY not found in environment variables.")
         log_to_db("ERROR", "config", "OPENROUTER_API_KEY not found")
         return False
 
-    llm = OpenRouter(
-        api_key=api_key,
-        model="meta-llama/llama-3.3-70b-instruct:free",
-        max_tokens=512,
-        temperature=0.1,
-        system_prompt=(
-            "You are an expert technical assistant that answers ONLY using the provided codebase context. "
-            "Never hallucinate. If the answer is not in the context, say so. "
-            "Provide short, clear, factual responses with code snippets where relevant."
-        ),
-    )
-    
-    embed_model = HuggingFaceEmbedding(
-        model_name="BAAI/bge-small-en-v1.5"
-    )
+    try:
+        llm = OpenRouter(
+            api_key=api_key,
+            model="meta-llama/llama-3.3-70b-instruct:free",
+            max_tokens=512,
+            temperature=0.1,
+            system_prompt=(
+                "You are an expert technical assistant that answers ONLY using the provided codebase context. "
+                "Never hallucinate. If the answer is not in the context, say so. "
+                "Provide short, clear, factual responses with code snippets where relevant."
+            ),
+        )
+        
+        embed_model = HuggingFaceEmbedding(
+            model_name="BAAI/bge-small-en-v1.5"
+        )
 
-    Settings.llm = llm
-    Settings.embed_model = embed_model
-    log_to_db("INFO", "config", "Settings initialized successfully")
-    return True
-
-init_settings()
+        Settings.llm = llm
+        Settings.embed_model = embed_model
+        ai_initialized = True
+        logger.info("✅ AI Engine Ready!")
+        log_to_db("INFO", "system", "AI Engine Ready")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to initialize AI: {e}")
+        log_to_db("ERROR", "system", f"Failed to initialize AI: {e}")
+        return False
 
 # === Input Validation ===
 def validate_local_path(path):
@@ -210,10 +223,18 @@ def get_cached_metadata(index_hash):
 
 @app.route('/')
 def home():
+    # Lazy load AI models
+    if not initialize_ai():
+         return jsonify({"error": "Failed to initialize AI models (check API keys)"}), 500
+    
     return render_template('index.html')
 
 @app.route('/index', methods=['POST'])
 def index_codebase():
+    # Lazy load AI models
+    if not initialize_ai():
+         return jsonify({"error": "Failed to initialize AI models (check API keys)"}), 500
+
     global index_engine, indexing_status
     data = request.json
     source_type = data.get('type')
@@ -356,6 +377,10 @@ def index_codebase():
 @app.route('/chat', methods=['POST'])
 @limiter.limit("30 per minute")
 def chat():
+    # Lazy load AI models
+    if not initialize_ai():
+         return jsonify({"error": "Failed to initialize AI models"}), 500
+
     global index_engine
     if not index_engine:
         return jsonify({"error": "Codebase not indexed yet. Please index a codebase first."}), 400
