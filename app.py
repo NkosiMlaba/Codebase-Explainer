@@ -437,4 +437,10 @@ def ratelimit_handler(e):
 
 if __name__ == '__main__':
     os.makedirs(INDEX_STORAGE_DIR, exist_ok=True)
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    is_render = os.environ.get("RENDER", "False").lower() == "true"
+    
+    if is_render:
+        port = int(os.environ.get("PORT", 10000))
+        app.run(host='0.0.0.0', port=port, debug=False)
+    else:
+        app.run(host='127.0.0.1', port=5000, debug=True)
