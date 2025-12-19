@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Codebase Explainer</title>
+    <style>
+        :root,
+        [data-theme="dark"] {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-color: #e2e8f0;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --success-color: #4ade80;
+            --error-color: #f87171;
+            --warning-color: #fbbf24;
+            --info-color: #60a5fa;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        .header a {
+            color: var(--info-color);
+            text-decoration: none;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .stat-card h3 {
+            margin: 0 0 5px 0;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .stat-card .value {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .stat-card .value.ok {
+            color: var(--success-color);
+        }
+
+        .stat-card .value.error {
+            color: var(--error-color);
+        }
+
+        .logs-section {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .logs-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .logs-header h2 {
+            margin: 0;
+            font-size: 1.1rem;
+        }
+
+        .filter-btns {
+            display: flex;
+            gap: 8px;
+        }
+
+        .filter-btn {
+            padding: 5px 10px;
+            border: 1px solid var(--border-color);
+            background: transparent;
+            color: var(--text-color);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .filter-btn:hover,
+        .filter-btn.active {
+            background: var(--border-color);
+        }
+
+        .logs-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        .logs-table th,
+        .logs-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logs-table th {
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .level-badge {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .level-INFO {
+            background: rgba(96, 165, 250, 0.2);
+            color: var(--info-color);
+        }
+
+        .level-WARNING {
+            background: rgba(251, 191, 36, 0.2);
+            color: var(--warning-color);
+        }
+
+        .level-ERROR {
+            background: rgba(248, 113, 113, 0.2);
+            color: var(--error-color);
+        }
+
+        .category-badge {
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            background: var(--border-color);
+        }
+
+        .refresh-btn {
+            padding: 8px 16px;
+            background: var(--info-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .refresh-btn:hover {
+            opacity: 0.9;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>📊 Admin Dashboard</h1>
+        <a href="/">← Back to Chat</a>
+    </div>
+
+    <div class="stats" id="stats">
+        <div class="stat-card">
+            <h3>Status</h3>
+            <div class="value" id="status">Loading...</div>
+        </div>
+        <div class="stat-card">
+            <h3>Index Loaded</h3>
+            <div class="value" id="index-status">-</div>
+        </div>
+        <div class="stat-card">
+            <h3>OpenRouter API</h3>
+            <div class="value" id="openrouter-status">-</div>
+        </div>
+        <div class="stat-card">
+            <h3>GitHub Token</h3>
+            <div class="value" id="github-status">-</div>
+        </div>
+    </div>
+
+    <div class="logs-section">
+        <div class="logs-header">
+            <h2>Recent Logs</h2>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <div class="filter-btns">
+                    <button class="filter-btn active" data-filter="all">All</button>
+                    <button class="filter-btn" data-filter="ERROR">Errors</button>
+                    <button class="filter-btn" data-filter="WARNING">Warnings</button>
+                    <button class="filter-btn" data-filter="INFO">Info</button>
+                </div>
+                <button class="refresh-btn" onclick="loadLogs()">Refresh</button>
+            </div>
+        </div>
+
+        <table class="logs-table">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Level</th>
+                    <th>Category</th>
+                    <th>Message</th>
+                </tr>
+            </thead>
+            <tbody id="logs-body">
+                <tr>
+                    <td colspan="4" class="empty-state">Loading logs...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        let allLogs = [];
+        let currentFilter = 'all';
+
+        async function loadHealth() {
+            try {
+                const res = await fetch('/health');
+                const data = await res.json();
+
+                document.getElementById('status').textContent = data.status.toUpperCase();
+                document.getElementById('status').className = 'value ok';
+
+                document.getElementById('index-status').textContent = data.index_loaded ? 'Yes' : 'No';
+                document.getElementById('index-status').className = 'value ' + (data.index_loaded ? 'ok' : 'error');
+
+                document.getElementById('openrouter-status').textContent = data.openrouter_configured ? 'Configured' : 'Missing';
+                document.getElementById('openrouter-status').className = 'value ' + (data.openrouter_configured ? 'ok' : 'error');
+
+                document.getElementById('github-status').textContent = data.github_configured ? 'Configured' : 'Missing';
+                document.getElementById('github-status').className = 'value ' + (data.github_configured ? 'ok' : 'error');
+            } catch (e) {
+                document.getElementById('status').textContent = 'ERROR';
+                document.getElementById('status').className = 'value error';
+            }
+        }
+
+        async function loadLogs() {
+            try {
+                const res = await fetch('/admin/logs');
+                allLogs = await res.json();
+                renderLogs();
+            } catch (e) {
+                document.getElementById('logs-body').innerHTML =
+                    '<tr><td colspan="4" class="empty-state">Failed to load logs</td></tr>';
+            }
+        }
+
+        function renderLogs() {
+            const filtered = currentFilter === 'all'
+                ? allLogs
+                : allLogs.filter(log => log.level === currentFilter);
+
+            if (filtered.length === 0) {
+                document.getElementById('logs-body').innerHTML =
+                    '<tr><td colspan="4" class="empty-state">No logs found</td></tr>';
+                return;
+            }
+
+            document.getElementById('logs-body').innerHTML = filtered.map(log => `
+                <tr>
+                    <td>${new Date(log.timestamp).toLocaleString()}</td>
+                    <td><span class="level-badge level-${log.level}">${log.level}</span></td>
+                    <td><span class="category-badge">${log.category}</span></td>
+                    <td>${log.message}</td>
+                </tr>
+            `).join('');
+        }
+
+        // Filter buttons
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentFilter = btn.dataset.filter;
+                renderLogs();
+            });
+        });
+
+        // Initial load
+        loadHealth();
+        loadLogs();
+
+        // Auto-refresh every 30 seconds
+        setInterval(() => {
+            loadHealth();
+            loadLogs();
+        }, 30000);
+    </script>
+</body>
+
+</html>

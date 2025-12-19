@@ -546,13 +546,35 @@
             }
         });
 
+        // === Input Validation ===
+        function validateInput(type, path) {
+            if (!path) {
+                return { valid: false, error: "Please enter a path or URL." };
+            }
+
+            if (type === 'local') {
+                if (!path.startsWith('/')) {
+                    return { valid: false, error: "Local path must be absolute (start with /)" };
+                }
+            } else if (type === 'github') {
+                const githubPattern = /^https?:\/\/github\.com\/[\w.-]+\/[\w.-]+\/?$/;
+                if (!githubPattern.test(path)) {
+                    return { valid: false, error: "Invalid GitHub URL. Use: https://github.com/owner/repo" };
+                }
+            }
+
+            return { valid: true };
+        }
+
         // === Indexing Logic ===
         indexBtn.addEventListener('click', async () => {
             const type = sourceTypeSelect.value;
             const path = sourcePathInput.value.trim();
 
-            if (!path) {
-                statusMsg.innerHTML = '<span class="status-error">Please enter a path or URL.</span>';
+            // Client-side validation
+            const validation = validateInput(type, path);
+            if (!validation.valid) {
+                statusMsg.innerHTML = '<span class="status-error">' + validation.error + '</span>';
                 return;
             }
 
@@ -574,7 +596,9 @@
                 const data = await res.json();
 
                 if (res.ok) {
-                    statusMsg.innerHTML = '<span class="status-success">✓ ' + data.message + '</span>';
+                    // Check if cached
+                    const cacheNote = data.cached ? ' (from cache)' : '';
+                    statusMsg.innerHTML = '<span class="status-success">✓ ' + data.message + cacheNote + '</span>';
 
                     // Render file tree
                     if (data.indexed_files && data.indexed_files.length > 0) {

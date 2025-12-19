@@ -8,3 +8,4 @@ llama-index-readers-file
 sentence-transformers
 nest_asyncio
 pathspec
+flask-limiter
